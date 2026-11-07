@@ -10,7 +10,7 @@ A warehouse inventory web app plus a complete automated test framework for it.
 | End-to-end | Same stock checked in the UI and in the API |
 | Reports | Allure (steps, request/response logs, failure screenshots) |
 | Load test | `k6/load-test.js` with pass/fail thresholds |
-| CI | `Jenkinsfile` starter |
+| CI | `Jenkinsfile` (API, k6 and UI stages) |
 
 ## Warehouse model
 - **Stock per bin:** each item holds quantity in one or more bin locations (for example A-01: 20, E-09: 5).
@@ -150,3 +150,23 @@ Lines starting with `#` are comments. Rows marked `REJECTED` must return a 4xx a
 stock unchanged.
 
 Current status: 169 tests (API, UI and end-to-end), 0 failures.
+
+## 5. Run in Docker
+
+    docker compose up -d warehouse-app                         # app on http://localhost:8080
+    mvn test "-DsuiteFile=testng-api.xml"                      # API tests against the container
+    docker compose --profile load run --rm k6                  # k6 load test inside Docker
+    docker compose down
+
+The suite uses the app already running on port 8080 instead of starting its own.
+
+## CI (Jenkins)
+
+`Jenkinsfile` runs the API tests, a k6 load test (the 50 s `load` profile with pass/fail
+thresholds), then the UI and end-to-end tests. JUnit results, Allure results, the k6 summary
+and the app log are archived. The agent needs JDK 25, Maven, Chrome, k6 and curl.
+
+## Status
+
+169 tests (API, UI and end-to-end), 0 failures. API suite also verified against the Docker
+container (144 tests). k6 `load` profile passes inside Docker (0.00% failed, p95 21 ms).
