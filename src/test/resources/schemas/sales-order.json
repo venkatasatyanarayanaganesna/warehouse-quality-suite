@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "required": [
+    "id",
+    "customer",
+    "sku",
+    "ordered",
+    "shipped",
+    "outstanding",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "customer": {
+      "type": "string"
+    },
+    "sku": {
+      "type": "string"
+    },
+    "ordered": {
+      "type": "integer"
+    },
+    "shipped": {
+      "type": "integer"
+    },
+    "outstanding": {
+      "type": "integer"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "OPEN",
+        "PARTIAL",
+        "SHIPPED"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "status",
+      "bins",
+      "lines"
+    ],
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "OPEN",
+          "SUBMITTED",
+          "APPROVED"
+        ]
+      },
+      "bins": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "sku",
+            "location",
+            "expected",
+            "counted",
+            "variance"
+          ],
+          "properties": {
+            "sku": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "expected": {
+              "type": "integer"
+            },
+            "counted": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "variance": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}

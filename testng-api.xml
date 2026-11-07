@@ -1,0 +1,11 @@
+﻿<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Warehouse API Suite">
+  <listeners>
+    <listener class-name="com.ganesna.wms.base.AppLifecycleListener"/>
+  </listeners>
+  <test name="API Tests">
+    <packages>
+      <package name="com.ganesna.wms.tests.api"/>
+    </packages>
+  </test>
+</suite>

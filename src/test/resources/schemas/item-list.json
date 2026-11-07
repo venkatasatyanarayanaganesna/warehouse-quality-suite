@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "sku",
+      "name",
+      "quantity",
+      "location",
+      "reorderLevel",
+      "lowStock",
+      "locations"
+    ],
+    "properties": {
+      "sku": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "quantity": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "location": {
+        "type": "string"
+      },
+      "reorderLevel": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "lowStock": {
+        "type": "boolean"
+      },
+      "locations": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "location",
+            "quantity"
+          ],
+          "properties": {
+            "location": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}

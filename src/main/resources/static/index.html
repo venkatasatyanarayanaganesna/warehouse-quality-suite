@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Warehouse Inventory</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f6fed'/%3E%3Cpath d='M7 12l9-5 9 5v9l-9 5-9-5z' fill='none' stroke='white' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M7 12l9 5 9-5M16 17v9' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f1f4f9; --card: #ffffff; --text: #1b2638; --muted: #66748b; --border: #e2e8f0;
+    --primary: #2f6fed; --primary-dark: #2458c4; --track: #e8edf5;
+    --ok: #16a34a; --ok-bg: #dcfce7; --ok-text: #14532d;
+    --low: #dc2626; --low-bg: #fee2e2; --low-text: #7f1d1d;
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 6px 18px rgba(16,24,40,.07);
+    --hero-a: #1e3a8a; --hero-b: #2f6fed; --hit: #dbeafe;
+  }
+  [data-theme="dark"] {
+    --bg: #0e1522; --card: #172033; --text: #e7ecf6; --muted: #93a1ba; --border: #27344d;
+    --primary: #5b93ff; --primary-dark: #7aa8ff; --track: #243149;
+    --ok-bg: #12351f; --ok-text: #86efac; --low-bg: #3b1515; --low-text: #fca5a5;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.35);
+    --hero-a: #0b1b4d; --hero-b: #1d4ed8; --hit: #1c2e57;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+  svg { display: block; }
+  button { font: inherit; cursor: pointer; border: 0; border-radius: 8px; padding: 8px 14px; background: var(--primary); color: #fff; transition: background .15s; }
+  button:hover { background: var(--primary-dark); }
+  button.secondary { background: #55627a; }
+  button.secondary:hover { background: #3f4b61; }
+  button.danger { background: var(--low); }
+  button.danger:hover { background: #b91c1c; }
+  button.ghost { background: rgba(255,255,255,.16); color: #fff; }
+  button.ghost:hover { background: rgba(255,255,255,.28); }
+  button.outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  button.outline:hover { background: var(--track); }
+  .icon-btn { display: inline-flex; align-items: center; gap: 6px; }
+  .ico svg { width: 16px; height: 16px; }
+  input, select { font: inherit; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); width: 100%; }
+  input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: 0; border-color: transparent; }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+
+  /* login */
+  #login-view { max-width: 980px; margin: 6vh auto; display: grid; grid-template-columns: 1.1fr 1fr; background: var(--card); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
+  .auth-hero { background: linear-gradient(145deg, var(--hero-a), var(--hero-b)); color: #fff; padding: 36px; display: flex; flex-direction: column; gap: 18px; }
+  .auth-hero h2 { margin: 0; font-size: 30px; line-height: 1.15; }
+  .auth-hero p { margin: 0; opacity: .85; }
+  .auth-hero ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; }
+  .auth-hero li { display: flex; align-items: center; gap: 8px; }
+  .auth-hero li::before { content: "\2713"; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,.22); font-size: 12px; }
+  .auth-hero svg.illustration { width: 100%; height: auto; margin-top: auto; }
+  .auth-form { padding: 44px 40px; display: flex; flex-direction: column; justify-content: center; }
+  .auth-form h1 { margin: 0 0 4px; font-size: 26px; }
+  .auth-form .sub { color: var(--muted); margin: 0 0 18px; }
+  .auth-form .field { margin-bottom: 14px; }
+  .auth-form button { width: 100%; padding: 11px; font-weight: 600; margin-top: 4px; }
+  #login-error { color: var(--low); min-height: 20px; margin: 10px 0 0; font-size: 14px; }
+  .demo-box { margin-top: 12px; padding: 12px; border: 1px dashed var(--border); border-radius: 10px; font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+  .demo-box b { color: var(--text); }
+
+  /* app */
+  .appbar { background: linear-gradient(120deg, var(--hero-a), var(--hero-b)); color: #fff; }
+  .appbar-inner { max-width: 1160px; margin: 0 auto; padding: 16px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+  .brand .logo { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,.18); display: grid; place-items: center; }
+  .brand .logo svg { width: 26px; height: 26px; }
+  .brand h1 { margin: 0; font-size: 20px; }
+  .brand small { opacity: .8; }
+  .user-chip { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.16); padding: 5px 12px 5px 5px; border-radius: 999px; font-size: 14px; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: #fff; color: var(--hero-a); display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+  main { max-width: 1160px; margin: 0 auto; padding: 20px; display: grid; gap: 18px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; box-shadow: var(--shadow); }
+  .card h2 { margin: 0 0 12px; font-size: 16px; }
+  .card h2 small { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 6px; }
+  .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+  .grid-2 > *, .grid-3 > * { min-width: 0; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+  .stat { display: flex; align-items: center; gap: 14px; }
+  .stat .badge-ico { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+  .stat .badge-ico svg { width: 24px; height: 24px; }
+  .stat .label { font-size: 13px; color: var(--muted); }
+  .stat .value { font-size: 28px; font-weight: 700; line-height: 1.1; }
+  .tone-blue { background: #dbe7ff; color: #1d4ed8; }
+  .tone-green { background: var(--ok-bg); color: var(--ok); }
+  .tone-red { background: var(--low-bg); color: var(--low); }
+  .tone-amber { background: #fef3c7; color: #b45309; }
+  [data-theme="dark"] .tone-blue { background: #1c2e57; color: #8db1ff; }
+  [data-theme="dark"] .tone-amber { background: #3b2d0c; color: #fbbf24; }
+  .chart-row { display: grid; grid-template-columns: 92px 1fr 110px; align-items: center; gap: 10px; margin-bottom: 9px; font-size: 13px; }
+  .chart-label { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chart-track { background: var(--track); border-radius: 999px; height: 12px; overflow: hidden; }
+  .chart-bar { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #3b82f6, #6366f1); transition: width .5s ease; }
+  .chart-bar.is-low { background: linear-gradient(90deg, #f97316, #dc2626); }
+  .chart-bar.is-full { background: linear-gradient(90deg, #f59e0b, #dc2626); }
+  .chart-val { text-align: right; font-weight: 600; white-space: nowrap; }
+  .donut-wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; justify-content: center; }
+  .donut { width: 150px; height: 150px; }
+  .donut .arc-track { stroke: var(--track); }
+  .donut .arc-ok { stroke: var(--ok); }
+  .donut .arc-low { stroke: var(--low); }
+  .donut text { fill: var(--text); font-weight: 700; }
+  .donut text.small { fill: var(--muted); font-weight: 400; }
+  .legend { display: grid; gap: 8px; font-size: 14px; }
+  .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+  .toolbar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
+  .toolbar .grow { flex: 1; min-width: 220px; }
+  .toolbar .scan { flex: 1; min-width: 220px; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); margin: 0 0 6px; }
+  .check input { width: auto; }
+  .table-scroll { overflow-x: auto; }
+  .scroll-y { max-height: 300px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+  tbody tr:hover { background: var(--track); }
+  tr.hit td { background: var(--hit); }
+  td.sku { font-weight: 600; font-family: ui-monospace, Consolas, monospace; }
+  td.qty { font-weight: 700; }
+  td.reserved { color: var(--muted); }
+  td.locations { color: var(--muted); font-size: 13px; }
+  td.level { min-width: 110px; }
+  td.actions { white-space: nowrap; }
+  td.actions input { width: 62px; padding: 6px 8px; margin-right: 4px; }
+  td.actions button { padding: 6px 10px; margin-right: 3px; font-size: 13px; }
+  .bar { height: 8px; background: var(--track); border-radius: 999px; overflow: hidden; }
+  .fill { display: block; height: 100%; background: var(--ok); border-radius: 999px; transition: width .4s ease; }
+  .fill.fill-low { background: var(--low); }
+  .badge { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .badge-ok { background: var(--ok-bg); color: var(--ok-text); }
+  .badge-low { background: var(--low-bg); color: var(--low-text); }
+  .badge-open { background: #dbeafe; color: #1e40af; }
+  .badge-warn { background: #fef3c7; color: #92400e; }
+  [data-theme="dark"] .badge-open { background: #1c2e57; color: #8db1ff; }
+  [data-theme="dark"] .badge-warn { background: #3b2d0c; color: #fbbf24; }
+  .empty { text-align: center; padding: 24px; color: var(--muted); }
+  .muted { color: var(--muted); font-size: 13px; }
+  .form-stack { display: grid; gap: 10px; }
+  .form-stack .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-stack button { justify-self: start; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: end; }
+  #message { margin: 12px 0 0; min-height: 0; border-radius: 8px; font-size: 14px; }
+  #message:not(:empty) { padding: 10px 14px; }
+  #message.ok { background: var(--ok-bg); color: var(--ok-text); border-left: 4px solid var(--ok); }
+  #message.error { background: var(--low-bg); color: var(--low-text); border-left: 4px solid var(--low); }
+  .alert-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; }
+  .alert-list li { padding: 8px 10px; border-radius: 8px; background: var(--low-bg); color: var(--low-text); }
+  .top-list { margin: 0; padding-left: 18px; font-size: 14px; display: grid; gap: 6px; }
+  @media (max-width: 860px) {
+    #login-view { grid-template-columns: 1fr; margin: 0; border-radius: 0; }
+    .auth-hero { display: none; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<section id="login-view">
+  <div class="auth-hero">
+    <div class="brand">
+      <div class="logo" data-icon="box"></div>
+      <div><h1 style="margin:0;font-size:20px">Warehouse Inventory</h1><small>Stock control made simple</small></div>
+    </div>
+    <h2>Track stock.<br>Pick faster.</h2>
+    <p>Bins, transfers, orders, capacity and a full audit trail in one place.</p>
+    <ul>
+      <li>Stock held per bin location</li>
+      <li>Purchase and sales orders with reservations</li>
+      <li>Role based access for admins and pickers</li>
+    </ul>
+    <svg class="illustration" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="0" y="196" width="400" height="24" rx="4" fill="rgba(255,255,255,.14)"/>
+      <g stroke="rgba(255,255,255,.55)" stroke-width="5" stroke-linecap="round">
+        <line x1="40" y1="30" x2="40" y2="196"/><line x1="200" y1="30" x2="200" y2="196"/><line x1="360" y1="30" x2="360" y2="196"/>
+        <line x1="34" y1="90" x2="366" y2="90"/><line x1="34" y1="150" x2="366" y2="150"/><line x1="34" y1="196" x2="366" y2="196"/>
+      </g>
+      <rect x="56" y="52" width="46" height="38" rx="3" fill="#fbbf24"/><rect x="56" y="62" width="46" height="6" fill="#d97706"/>
+      <rect x="108" y="64" width="38" height="26" rx="3" fill="#60a5fa"/><rect x="108" y="72" width="38" height="5" fill="#2563eb"/>
+      <rect x="216" y="48" width="52" height="42" rx="3" fill="#f87171"/><rect x="216" y="60" width="52" height="6" fill="#b91c1c"/>
+      <rect x="276" y="62" width="40" height="28" rx="3" fill="#fbbf24"/><rect x="276" y="71" width="40" height="5" fill="#d97706"/>
+      <rect x="60" y="112" width="40" height="38" rx="3" fill="#34d399"/><rect x="60" y="123" width="40" height="5" fill="#059669"/>
+      <rect x="106" y="104" width="52" height="46" rx="3" fill="#fbbf24"/><rect x="106" y="118" width="52" height="6" fill="#d97706"/>
+      <rect x="226" y="120" width="44" height="30" rx="3" fill="#60a5fa"/><rect x="226" y="128" width="44" height="5" fill="#2563eb"/>
+      <rect x="278" y="108" width="50" height="42" rx="3" fill="#a78bfa"/><rect x="278" y="120" width="50" height="6" fill="#6d28d9"/>
+      <rect x="56" y="170" width="110" height="8" fill="#b45309"/><rect x="56" y="184" width="110" height="8" fill="#b45309"/>
+      <rect x="64" y="146" width="44" height="24" rx="3" fill="#fbbf24"/><rect x="112" y="142" width="46" height="28" rx="3" fill="#34d399"/>
+      <rect x="226" y="160" width="36" height="32" rx="3" fill="#60a5fa"/><rect x="268" y="156" width="42" height="36" rx="3" fill="#f87171"/>
+      <g transform="translate(318 40)"><rect width="34" height="22" rx="3" fill="#fff" opacity=".92"/>
+        <g fill="#1e3a8a"><rect x="4" y="4" width="2" height="14"/><rect x="8" y="4" width="1" height="14"/><rect x="11" y="4" width="3" height="14"/><rect x="16" y="4" width="1" height="14"/><rect x="19" y="4" width="2" height="14"/><rect x="23" y="4" width="3" height="14"/><rect x="28" y="4" width="1" height="14"/></g></g>
+    </svg>
+  </div>
+  <div class="auth-form">
+    <h1>Welcome back</h1>
+    <p class="sub">Sign in to manage your warehouse stock.</p>
+    <div class="field"><label for="username">Username</label><input id="username" autocomplete="off" placeholder="admin"></div>
+    <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="off" placeholder="Your password"></div>
+    <button id="login-btn">Sign in</button>
+    <p id="login-error" role="alert"></p>
+    <div class="demo-box">
+      <span><b>Admin</b>  admin / admin123 (everything)</span>
+      <span><b>Picker</b>  picker / picker123 (no counts, capacity or deletes)</span>
+    </div>
+  </div>
+</section>
+
+<!-- APP -->
+<div id="app-view" hidden>
+  <header class="appbar">
+    <div class="appbar-inner">
+      <div class="brand">
+        <div class="logo" data-icon="box"></div>
+        <div><h1>Warehouse Inventory</h1><small>Live stock overview</small></div>
+      </div>
+      <div class="user-chip"><span class="avatar" id="avatar">A</span><span id="current-user"></span></div>
+      <button id="theme-toggle" class="ghost icon-btn" title="Switch light or dark theme"><span class="ico" data-icon="moon"></span><span id="theme-label">Dark</span></button>
+      <button id="logout-btn" class="ghost icon-btn"><span class="ico" data-icon="logout"></span>Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="stats">
+      <div class="card stat"><div class="badge-ico tone-blue" data-icon="stack"></div><div><div class="label">Products (SKUs)</div><div class="value" id="stat-skus">0</div></div></div>
+      <div class="card stat"><div class="badge-ico tone-green" data-icon="box"></div><div><div class="label">Units in stock</div><div class="value" id="stat-units">0</div></div></div>
+      <div class="card stat"><div class="badge-ico tone-red" data-icon="alert"></div><div><div class="label">Low stock items</div><div class="value" id="stat-low">0</div></div></div>
+      <div class="card stat"><div class="badge-ico tone-amber" data-icon="pin"></div><div><div class="label">Bins in use</div><div class="value" id="stat-locations">0</div></div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card"><h2>Stock by item</h2><div id="stock-chart"></div></div>
+      <div class="card">
+        <h2>Stock health</h2>
+        <div class="donut-wrap">
+          <div id="health-chart"></div>
+          <div class="legend">
+            <div><span class="dot" style="background:var(--ok)"></span>Healthy: <b id="legend-ok">0</b></div>
+            <div><span class="dot" style="background:var(--low)"></span>Low stock: <b id="legend-low">0</b></div>
+            <div class="muted">Low means under the item's reorder level.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Inventory <small>stock is held per bin; reserved stock is promised to open sales orders</small></h2>
+      <div class="toolbar">
+        <div class="scan">
+          <label for="scan-input">Scan or type a SKU, then press Enter</label>
+          <input id="scan-input" placeholder="SKU-1002" autocomplete="off">
+          <div id="scan-hint" class="muted" style="margin-top:4px"></div>
+        </div>
+        <div class="grow"><label for="search-input">Search by SKU or name</label><input id="search-input" placeholder="e.g. scanner"></div>
+        <label class="check"><input type="checkbox" id="low-only"> Low stock only</label>
+        <button id="export-btn" class="outline icon-btn"><span class="ico" data-icon="download"></span>Export CSV</button>
+      </div>
+      <div class="table-scroll">
+        <table id="inventory-table">
+          <thead><tr><th>SKU</th><th>Name</th><th>Qty</th><th>Reserved</th><th>Locations</th><th>Status</th><th>Stock level</th><th>Actions</th></tr></thead>
+          <tbody id="items-body"></tbody>
+        </table>
+      </div>
+      <div id="empty-state" class="empty" hidden>No items match your filters.</div>
+      <p id="message" role="status"></p>
+    </div>
+
+    <div class="grid-3">
+      <div class="card" id="move-card">
+        <h2>Move stock <small>transfer between bins</small></h2>
+        <div class="form-stack">
+          <div><label for="xfer-sku">Item</label><select id="xfer-sku"></select></div>
+          <div class="row">
+            <div><label for="xfer-from">From bin</label><input id="xfer-from" placeholder="A-01"></div>
+            <div><label for="xfer-to">To bin</label><input id="xfer-to" placeholder="F-06"></div>
+          </div>
+          <div><label for="xfer-qty">Quantity</label><input id="xfer-qty" type="number" min="1" value="1"></div>
+          <button id="xfer-btn" class="icon-btn"><span class="ico" data-icon="pin"></span>Move</button>
+        </div>
+      </div>
+
+      <div class="card" id="adjust-card" data-admin>
+        <h2>Stock count <small>admin</small></h2>
+        <div class="form-stack">
+          <div><label for="adj-sku">Item</label><select id="adj-sku"></select></div>
+          <div class="row">
+            <div><label for="adj-loc">Bin</label><input id="adj-loc" placeholder="C-03"></div>
+            <div><label for="adj-qty">Counted quantity</label><input id="adj-qty" type="number" min="0" value="0"></div>
+          </div>
+          <div><label for="adj-reason">Reason (required)</label><input id="adj-reason" placeholder="Cycle count, damaged, found"></div>
+          <button id="adj-btn" class="icon-btn"><span class="ico" data-icon="stack"></span>Save count</button>
+        </div>
+      </div>
+
+      <div class="card" id="alerts-card">
+        <h2>Reorder alerts</h2>
+        <ul id="alerts-list" class="alert-list"></ul>
+        <p id="alerts-empty" class="muted" hidden>Everything is above its reorder level.</p>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card" id="sales-card">
+        <h2>Sales orders <small>shipping reduces stock</small></h2>
+        <div class="form-grid" style="margin-bottom:14px">
+          <div><label for="so-customer">Customer</label><input id="so-customer" placeholder="Shop Ltd"></div>
+          <div><label for="so-sku">Item</label><select id="so-sku"></select></div>
+          <div><label for="so-qty">Quantity</label><input id="so-qty" type="number" min="1" value="1"></div>
+          <button id="so-btn" class="icon-btn"><span class="ico" data-icon="box"></span>Create order</button>
+        </div>
+        <div class="table-scroll scroll-y">
+          <table>
+            <thead><tr><th>SO</th><th>Customer</th><th>Item</th><th>Shipped</th><th>Status</th><th>Ship</th></tr></thead>
+            <tbody id="so-body"></tbody>
+          </table>
+        </div>
+        <p id="so-empty" class="muted" hidden>No sales orders yet.</p>
+      </div>
+
+      <div class="card" id="capacity-card" data-admin>
+        <h2>Bin capacity <small>admin</small></h2>
+        <div class="form-grid" style="margin-bottom:14px">
+          <div><label for="cap-bin">Bin</label><input id="cap-bin" placeholder="A-01"></div>
+          <div><label for="cap-limit">Maximum units</label><input id="cap-limit" type="number" min="0" value="100"></div>
+          <button id="cap-btn" class="icon-btn"><span class="ico" data-icon="pin"></span>Set limit</button>
+        </div>
+        <div id="bins-list"></div>
+        <p id="bins-empty" class="muted" hidden>No bins yet.</p>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>Purchase orders</h2>
+        <div id="po-create" data-admin class="form-grid" style="margin-bottom:14px">
+          <div><label for="po-supplier">Supplier</label><input id="po-supplier" placeholder="Acme Supply"></div>
+          <div><label for="po-sku">Item</label><select id="po-sku"></select></div>
+          <div><label for="po-qty">Quantity</label><input id="po-qty" type="number" min="1" value="10"></div>
+          <div><label for="po-loc">Bin</label><input id="po-loc" placeholder="D-04"></div>
+          <button id="po-btn" class="icon-btn"><span class="ico" data-icon="box"></span>Create order</button>
+        </div>
+        <div class="table-scroll scroll-y">
+          <table>
+            <thead><tr><th>PO</th><th>Supplier</th><th>Item</th><th>Received</th><th>Status</th><th>Receive</th></tr></thead>
+            <tbody id="po-body"></tbody>
+          </table>
+        </div>
+        <p id="po-empty" class="muted" hidden>No purchase orders yet.</p>
+      </div>
+
+      <div class="card">
+        <h2>Add item</h2>
+        <div class="form-grid">
+          <div><label for="new-sku">SKU</label><input id="new-sku" placeholder="SKU-2001"></div>
+          <div><label for="new-name">Name</label><input id="new-name" placeholder="Dock plate"></div>
+          <div><label for="new-qty">Quantity</label><input id="new-qty" type="number" min="0" placeholder="0"></div>
+          <div><label for="new-location">Bin</label><input id="new-location" placeholder="E-05"></div>
+          <button id="add-btn" class="icon-btn"><span class="ico" data-icon="plus"></span>Add item</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>Reports <small>from the audit trail</small></h2>
+        <div class="grid-2" style="grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <label>Activity by day</label>
+            <div class="table-scroll scroll-y">
+              <table><thead><tr><th>Day</th><th>Events</th></tr></thead><tbody id="rep-days"></tbody></table>
+            </div>
+          </div>
+          <div>
+            <label>Top moving items (picked or shipped)</label>
+            <ol id="rep-top" class="top-list"></ol>
+            <p id="rep-top-empty" class="muted" hidden>Nothing has been picked or shipped yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Audit trail <small>newest first</small></h2>
+        <div class="table-scroll scroll-y">
+          <table>
+            <thead><tr><th>Time</th><th>Type</th><th>SKU</th><th>Bin</th><th>Qty</th><th>User</th><th>Note</th></tr></thead>
+            <tbody id="audit-body"></tbody>
+          </table>
+        </div>
+        <p id="audit-empty" class="muted" hidden>No activity yet.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const ICONS = {
+  box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M3 7.5l9-4.5 9 4.5v9l-9 4.5-9-4.5z"/><path d="M3 7.5l9 4.5 9-4.5M12 12v9"/></svg>',
+  stack: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 22s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>',
+  logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>'
+};
+function applyIcons(root) {
+  (root || document).querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = ICONS[el.dataset.icon] || ''; });
+}
+
+let allItems = [];
+let salesOrders = [];
+
+/* ---------- api and helpers ---------- */
+async function api(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  const token = sessionStorage.getItem('token');
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(path, { ...options, headers });
+  let data = null;
+  if (res.status !== 204) {
+    try { data = await res.json(); } catch (e) { data = null; }
+  }
+  return { ok: res.ok, status: res.status, data };
+}
+
+function setMessage(text, isError) {
+  const m = $('message');
+  m.textContent = text || '';
+  m.className = text ? (isError ? 'error' : 'ok') : '';
+}
+
+/** Shows the success text, or the server's error message. Returns true on success. */
+function report(r, okText) {
+  if (r.ok) { setMessage(okText, false); return true; }
+  setMessage((r.data && r.data.error) || 'Request failed', true);
+  return false;
+}
+
+function cell(text, className) {
+  const td = document.createElement('td');
+  td.textContent = text;
+  if (className) td.className = className;
+  return td;
+}
+
+function button(id, label, className, onClick) {
+  const b = document.createElement('button');
+  b.id = id;
+  b.textContent = label;
+  if (className) b.className = className;
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+function statusBadge(status) {
+  const td = document.createElement('td');
+  const b = document.createElement('span');
+  b.className = 'badge ' + (status === 'RECEIVED' || status === 'SHIPPED' ? 'badge-ok' : status === 'PARTIAL' ? 'badge-warn' : 'badge-open');
+  b.textContent = status;
+  td.appendChild(b);
+  return td;
+}
+
+/* ---------- theme ---------- */
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  $('theme-toggle').querySelector('.ico').innerHTML = theme === 'dark' ? ICONS.sun : ICONS.moon;
+  $('theme-label').textContent = theme === 'dark' ? 'Light' : 'Dark';
+  try { localStorage.setItem('theme', theme); } catch (e) { /* storage can be blocked */ }
+}
+function toggleTheme() {
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+}
+
+/* ---------- login ---------- */
+async function login() {
+  const username = $('username').value.trim();
+  const password = $('password').value;
+  $('login-error').textContent = '';
+  if (!username || !password) {
+    $('login-error').textContent = 'Username and password are required';
+    return;
+  }
+  const r = await api('/api/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+  if (!r.ok) {
+    $('login-error').textContent = (r.data && r.data.error) || 'Login failed';
+    return;
+  }
+  sessionStorage.setItem('token', r.data.token);
+  sessionStorage.setItem('user', r.data.username);
+  sessionStorage.setItem('role', r.data.role);
+  showApp();
+}
+
+function logout() {
+  sessionStorage.clear();
+  $('app-view').hidden = true;
+  $('login-view').hidden = false;
+  $('password').value = '';
+  setMessage('');
+}
+
+function showApp() {
+  $('login-view').hidden = true;
+  $('app-view').hidden = false;
+  const user = sessionStorage.getItem('user') || '';
+  const role = sessionStorage.getItem('role') || '';
+  $('current-user').textContent = user + ' (' + role + ')';
+  $('avatar').textContent = user.charAt(0).toUpperCase();
+  const isAdmin = role === 'ADMIN';
+  document.querySelectorAll('[data-admin]').forEach(el => { el.hidden = !isAdmin; });
+  loadAll();
+}
+
+/* ---------- loading ---------- */
+async function loadAll() {
+  const r = await api('/api/items');
+  if (r.status === 401) { logout(); return; }
+  allItems = r.data || [];
+  await loadSales();
+  renderSelects();
+  applyFilters();
+  renderStats();
+  renderBarChart();
+  renderDonut();
+  await Promise.all([loadAlerts(), loadOrders(), loadAudit(), loadBins(), loadReports()]);
+}
+
+/** Units promised to open sales orders, per SKU. */
+function reservedBySku() {
+  const map = {};
+  for (const o of salesOrders) {
+    if (o.outstanding > 0) map[o.sku] = (map[o.sku] || 0) + o.outstanding;
+  }
+  return map;
+}
+
+function applyFilters() {
+  const q = $('search-input').value.trim().toLowerCase();
+  const lowOnly = $('low-only').checked;
+  const shown = allItems.filter(i =>
+    (!q || i.sku.toLowerCase().includes(q) || i.name.toLowerCase().includes(q)) &&
+    (!lowOnly || i.lowStock));
+  const maxQty = Math.max(1, ...allItems.map(i => i.quantity));
+  renderTable(shown, maxQty);
+}
+
+function renderTable(items, maxQty) {
+  const body = $('items-body');
+  body.innerHTML = '';
+  $('empty-state').hidden = items.length > 0;
+  const isAdmin = sessionStorage.getItem('role') === 'ADMIN';
+  const reserved = reservedBySku();
+  for (const item of items) {
+    const tr = document.createElement('tr');
+    tr.dataset.sku = item.sku;
+    tr.append(cell(item.sku, 'sku'), cell(item.name, 'name'), cell(String(item.quantity), 'qty'),
+      cell(String(reserved[item.sku] || 0), 'reserved'));
+    tr.appendChild(cell(item.locations.map(l => l.location + ': ' + l.quantity).join(', ') || 'None', 'locations'));
+
+    const status = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = 'badge ' + (item.lowStock ? 'badge-low' : 'badge-ok');
+    badge.textContent = item.lowStock ? 'Low stock' : 'In stock';
+    status.appendChild(badge);
+    tr.appendChild(status);
+
+    const level = document.createElement('td');
+    level.className = 'level';
+    const bar = document.createElement('div'); bar.className = 'bar';
+    const fill = document.createElement('span');
+    fill.className = 'fill' + (item.lowStock ? ' fill-low' : '');
+    fill.style.width = Math.max(4, Math.round(item.quantity / maxQty * 100)) + '%';
+    bar.appendChild(fill);
+    level.appendChild(bar);
+    tr.appendChild(level);
+
+    const actions = document.createElement('td');
+    actions.className = 'actions';
+    const qty = document.createElement('input');
+    qty.id = 'qty-' + item.sku; qty.type = 'number'; qty.min = '1'; qty.value = '1';
+    actions.appendChild(qty);
+    actions.appendChild(button('receive-' + item.sku, 'Receive', '', () => stockAction(item.sku, 'receive')));
+    actions.appendChild(button('pick-' + item.sku, 'Pick', 'secondary', () => stockAction(item.sku, 'pick')));
+    if (isAdmin) {
+      actions.appendChild(button('delete-' + item.sku, 'Delete', 'danger', () => deleteItem(item.sku)));
+    }
+    tr.appendChild(actions);
+    body.appendChild(tr);
+  }
+}
+
+function renderSelects() {
+  for (const id of ['xfer-sku', 'adj-sku', 'po-sku', 'so-sku']) {
+    const sel = $(id);
+    const previous = sel.value;
+    sel.innerHTML = '';
+    for (const item of allItems) {
+      const opt = document.createElement('option');
+      opt.value = item.sku;
+      opt.textContent = item.sku + ' - ' + item.name;
+      sel.appendChild(opt);
+    }
+    if ([...sel.options].some(o => o.value === previous)) sel.value = previous;
+  }
+}
+
+function renderStats() {
+  $('stat-skus').textContent = String(allItems.length);
+  $('stat-units').textContent = String(allItems.reduce((sum, i) => sum + i.quantity, 0));
+  $('stat-low').textContent = String(allItems.filter(i => i.lowStock).length);
+  $('stat-locations').textContent = String(new Set(allItems.flatMap(i => i.locations.map(l => l.location))).size);
+}
+
+function renderBarChart() {
+  const box = $('stock-chart');
+  box.innerHTML = '';
+  const top = [...allItems].sort((a, b) => b.quantity - a.quantity).slice(0, 8);
+  const max = Math.max(1, ...top.map(i => i.quantity));
+  if (top.length === 0) {
+    const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No items yet.';
+    box.appendChild(p);
+    return;
+  }
+  for (const item of top) {
+    const row = document.createElement('div'); row.className = 'chart-row';
+    const label = document.createElement('span'); label.className = 'chart-label'; label.textContent = item.sku; label.title = item.name;
+    const track = document.createElement('div'); track.className = 'chart-track';
+    const bar = document.createElement('div'); bar.className = 'chart-bar' + (item.lowStock ? ' is-low' : '');
+    bar.style.width = Math.max(3, Math.round(item.quantity / max * 100)) + '%';
+    track.appendChild(bar);
+    const val = document.createElement('span'); val.className = 'chart-val'; val.textContent = String(item.quantity);
+    row.append(label, track, val);
+    box.appendChild(row);
+  }
+}
+
+function renderDonut() {
+  const total = allItems.length;
+  const low = allItems.filter(i => i.lowStock).length;
+  const ok = total - low;
+  const okPct = total ? ok / total * 100 : 0;
+  const lowPct = total ? low / total * 100 : 0;
+  $('legend-ok').textContent = String(ok);
+  $('legend-low').textContent = String(low);
+  const arc = (cls, pct, offset) =>
+    '<circle class="' + cls + '" cx="21" cy="21" r="15.915" fill="none" stroke-width="6"' +
+    ' stroke-dasharray="' + pct.toFixed(2) + ' ' + (100 - pct).toFixed(2) + '" stroke-dashoffset="' + offset.toFixed(2) + '"/>';
+  $('health-chart').innerHTML =
+    '<svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Stock health">' +
+    '<circle class="arc-track" cx="21" cy="21" r="15.915" fill="none" stroke-width="6"/>' +
+    (okPct > 0 ? arc('arc-ok', okPct, 25) : '') +
+    (lowPct > 0 ? arc('arc-low', lowPct, 125 - okPct) : '') +
+    '<text x="21" y="21.5" text-anchor="middle" font-size="9">' + total + '</text>' +
+    '<text class="small" x="21" y="27.5" text-anchor="middle" font-size="3.6">items</text></svg>';
+}
+
+async function loadSales() {
+  const r = await api('/api/sales-orders');
+  salesOrders = r.ok ? r.data : [];
+  const body = $('so-body');
+  body.innerHTML = '';
+  for (const o of salesOrders) {
+    const tr = document.createElement('tr');
+    tr.dataset.so = o.id;
+    tr.append(cell('SO-' + o.id), cell(o.customer), cell(o.sku, 'sku'), cell(o.shipped + ' / ' + o.ordered));
+    tr.appendChild(statusBadge(o.status));
+    const act = document.createElement('td');
+    act.className = 'actions';
+    if (o.outstanding > 0) {
+      const q = document.createElement('input');
+      q.id = 'so-ship-qty-' + o.id; q.type = 'number'; q.min = '1'; q.value = String(o.outstanding);
+      act.appendChild(q);
+      act.appendChild(button('so-ship-' + o.id, 'Ship', '', () => shipOrder(o.id)));
+    }
+    tr.appendChild(act);
+    body.appendChild(tr);
+  }
+  $('so-empty').hidden = salesOrders.length > 0;
+}
+
+async function loadAlerts() {
+  const r = await api('/api/alerts');
+  const rows = r.ok ? r.data : [];
+  const list = $('alerts-list');
+  list.innerHTML = '';
+  for (const a of rows) {
+    const li = document.createElement('li');
+    li.textContent = a.sku + ' ' + a.name + ': ' + a.quantity + ' left (reorder at ' + a.reorderLevel + ', suggest ' + a.suggestedOrder + ')';
+    list.appendChild(li);
+  }
+  $('alerts-empty').hidden = rows.length > 0;
+}
+
+async function loadOrders() {
+  const r = await api('/api/purchase-orders');
+  const rows = r.ok ? r.data : [];
+  const body = $('po-body');
+  body.innerHTML = '';
+  for (const o of rows) {
+    const tr = document.createElement('tr');
+    tr.dataset.po = o.id;
+    tr.append(cell('PO-' + o.id), cell(o.supplier), cell(o.sku, 'sku'), cell(o.received + ' / ' + o.ordered));
+    tr.appendChild(statusBadge(o.status));
+    const act = document.createElement('td');
+    act.className = 'actions';
+    if (o.outstanding > 0) {
+      const q = document.createElement('input');
+      q.id = 'po-qty-' + o.id; q.type = 'number'; q.min = '1'; q.value = String(o.outstanding);
+      act.appendChild(q);
+      act.appendChild(button('po-recv-' + o.id, 'Receive', '', () => receiveOrder(o.id)));
+    }
+    tr.appendChild(act);
+    body.appendChild(tr);
+  }
+  $('po-empty').hidden = rows.length > 0;
+}
+
+async function loadBins() {
+  const r = await api('/api/locations');
+  const bins = r.ok ? r.data : [];
+  const box = $('bins-list');
+  box.innerHTML = '';
+  for (const b of bins) {
+    const row = document.createElement('div');
+    row.className = 'chart-row';
+    row.dataset.bin = b.location;
+    const label = document.createElement('span'); label.className = 'chart-label'; label.textContent = b.location;
+    const track = document.createElement('div'); track.className = 'chart-track';
+    const fill = document.createElement('div');
+    const full = b.capacity !== null && b.used >= b.capacity;
+    fill.className = 'chart-bar' + (full ? ' is-full' : '');
+    fill.style.width = (b.capacity ? Math.min(100, Math.round(b.used / b.capacity * 100)) : 0) + '%';
+    track.appendChild(fill);
+    const val = document.createElement('span'); val.className = 'chart-val';
+    val.textContent = b.used + ' of ' + (b.capacity === null ? 'no limit' : b.capacity);
+    row.append(label, track, val);
+    box.appendChild(row);
+  }
+  $('bins-empty').hidden = bins.length > 0;
+}
+
+async function loadAudit() {
+  const r = await api('/api/audit?limit=12');
+  const rows = r.ok ? r.data : [];
+  const body = $('audit-body');
+  body.innerHTML = '';
+  for (const e of rows) {
+    const tr = document.createElement('tr');
+    tr.append(
+      cell(new Date(e.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })),
+      cell(e.type),
+      cell(e.sku || '', 'sku'),
+      cell(e.location || '-'),
+      cell(String(e.quantity)),
+      cell(e.user || ''),
+      cell(e.note || ''));
+    body.appendChild(tr);
+  }
+  $('audit-empty').hidden = rows.length > 0;
+}
+
+async function loadReports() {
+  const r = await api('/api/audit?limit=500');
+  const events = r.ok ? r.data : [];
+  const perDay = new Map();
+  const moved = {};
+  for (const e of events) {
+    const day = new Date(e.time).toLocaleDateString();
+    perDay.set(day, (perDay.get(day) || 0) + 1);
+    if ((e.type === 'PICK' || e.type === 'SHIP') && e.sku) {
+      moved[e.sku] = (moved[e.sku] || 0) + e.quantity;
+    }
+  }
+  const dayBody = $('rep-days');
+  dayBody.innerHTML = '';
+  for (const [day, count] of perDay) {
+    const tr = document.createElement('tr');
+    tr.append(cell(day), cell(String(count)));
+    dayBody.appendChild(tr);
+  }
+  const top = Object.entries(moved).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const list = $('rep-top');
+  list.innerHTML = '';
+  for (const [sku, qty] of top) {
+    const li = document.createElement('li');
+    li.textContent = sku + ' - ' + qty + ' units out';
+    list.appendChild(li);
+  }
+  $('rep-top-empty').hidden = top.length > 0;
+}
+
+/* ---------- actions ---------- */
+async function stockAction(sku, action) {
+  const quantity = $('qty-' + sku).value;
+  const r = await api('/api/items/' + encodeURIComponent(sku) + '/' + action,
+    { method: 'POST', body: JSON.stringify({ quantity }) });
+  if (report(r, (action === 'receive' ? 'Received ' : 'Picked ') + quantity + ' unit(s) of ' + sku)) loadAll();
+}
+
+async function deleteItem(sku) {
+  const r = await api('/api/items/' + encodeURIComponent(sku), { method: 'DELETE' });
+  if (report(r, 'Deleted ' + sku)) loadAll();
+}
+
+async function addItem() {
+  const body = {
+    sku: $('new-sku').value.trim(),
+    name: $('new-name').value.trim(),
+    quantity: $('new-qty').value,
+    location: $('new-location').value.trim()
+  };
+  const r = await api('/api/items', { method: 'POST', body: JSON.stringify(body) });
+  if (report(r, 'Added ' + body.sku)) {
+    ['new-sku', 'new-name', 'new-qty', 'new-location'].forEach(id => { $(id).value = ''; });
+    loadAll();
+  }
+}
+
+async function transfer() {
+  const sku = $('xfer-sku').value;
+  const body = { from: $('xfer-from').value.trim(), to: $('xfer-to').value.trim(), quantity: $('xfer-qty').value };
+  const r = await api('/api/items/' + encodeURIComponent(sku) + '/transfer', { method: 'POST', body: JSON.stringify(body) });
+  if (report(r, 'Moved ' + body.quantity + ' of ' + sku + ' from ' + body.from + ' to ' + body.to)) loadAll();
+}
+
+async function adjust() {
+  const sku = $('adj-sku').value;
+  const body = { location: $('adj-loc').value.trim(), quantity: $('adj-qty').value, reason: $('adj-reason').value.trim() };
+  const r = await api('/api/items/' + encodeURIComponent(sku) + '/adjust', { method: 'POST', body: JSON.stringify(body) });
+  if (report(r, 'Count saved for ' + sku + ' at ' + body.location)) loadAll();
+}
+
+async function createOrder() {
+  const body = {
+    supplier: $('po-supplier').value.trim(),
+    sku: $('po-sku').value,
+    quantity: $('po-qty').value,
+    location: $('po-loc').value.trim()
+  };
+  const r = await api('/api/purchase-orders', { method: 'POST', body: JSON.stringify(body) });
+  if (report(r, 'Purchase order created for ' + body.sku)) loadAll();
+}
+
+async function receiveOrder(id) {
+  const quantity = $('po-qty-' + id).value;
+  const r = await api('/api/purchase-orders/' + id + '/receive', { method: 'POST', body: JSON.stringify({ quantity }) });
+  if (report(r, 'Received ' + quantity + ' on PO-' + id)) loadAll();
+}
+
+async function createSalesOrder() {
+  const customer = $('so-customer').value.trim();
+  const body = { customer, sku: $('so-sku').value, quantity: $('so-qty').value };
+  const r = await api('/api/sales-orders', { method: 'POST', body: JSON.stringify(body) });
+  if (report(r, 'Sales order created for ' + customer)) loadAll();
+}
+
+async function shipOrder(id) {
+  const quantity = $('so-ship-qty-' + id).value;
+  const r = await api('/api/sales-orders/' + id + '/ship', { method: 'POST', body: JSON.stringify({ quantity }) });
+  if (report(r, 'Shipped ' + quantity + ' on SO-' + id)) loadAll();
+}
+
+async function setCapacity() {
+  const bin = $('cap-bin').value.trim().toUpperCase();
+  const r = await api('/api/locations/' + encodeURIComponent(bin) + '/capacity',
+    { method: 'PUT', body: JSON.stringify({ capacity: $('cap-limit').value }) });
+  if (report(r, 'Capacity for ' + bin + ' set to ' + $('cap-limit').value)) loadAll();
+}
+
+/** Barcode-style lookup: exact SKU, highlight the row and focus its quantity box. */
+function scan() {
+  const code = $('scan-input').value.trim().toUpperCase();
+  document.querySelectorAll('#items-body tr.hit').forEach(tr => tr.classList.remove('hit'));
+  if (!code) { $('scan-hint').textContent = ''; return; }
+  const row = document.querySelector("#items-body tr[data-sku='" + code + "']");
+  if (!row) {
+    $('scan-hint').textContent = 'No item with SKU ' + code + ' in the current list';
+    return;
+  }
+  row.classList.add('hit');
+  if (typeof row.scrollIntoView === 'function') row.scrollIntoView({ block: 'center' });
+  const qty = $('qty-' + code);
+  if (qty) qty.focus();
+  $('scan-hint').textContent = 'Found ' + code;
+}
+
+function exportCsv() {
+  const rows = [['SKU', 'Name', 'Quantity', 'Locations', 'Low stock']]
+    .concat(allItems.map(i => [i.sku, i.name, i.quantity, i.locations.map(l => l.location + ':' + l.quantity).join(' '), i.lowStock]));
+  const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  link.download = 'inventory.csv';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setMessage('Exported ' + allItems.length + ' item(s) to inventory.csv', false);
+}
+
+/* ---------- start up ---------- */
+applyIcons();
+let savedTheme = null;
+try { savedTheme = localStorage.getItem('theme'); } catch (e) { /* ignore */ }
+applyTheme(savedTheme === 'dark' ? 'dark' : 'light');
+
+$('login-btn').addEventListener('click', login);
+$('password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+$('logout-btn').addEventListener('click', logout);
+$('theme-toggle').addEventListener('click', toggleTheme);
+$('search-input').addEventListener('input', applyFilters);
+$('low-only').addEventListener('change', applyFilters);
+$('scan-input').addEventListener('keydown', e => { if (e.key === 'Enter') scan(); });
+$('export-btn').addEventListener('click', exportCsv);
+$('add-btn').addEventListener('click', addItem);
+$('xfer-btn').addEventListener('click', transfer);
+$('adj-btn').addEventListener('click', adjust);
+$('po-btn').addEventListener('click', createOrder);
+$('so-btn').addEventListener('click', createSalesOrder);
+$('cap-btn').addEventListener('click', setCapacity);
+if (sessionStorage.getItem('token')) showApp();
+</script>
+</body>
+</html>

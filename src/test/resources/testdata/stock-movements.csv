@@ -1,0 +1,10 @@
+# name,startQty,action,amount,result,expectedQty
+Receive adds stock,10,receive,5,OK,15
+Receive one unit,10,receive,1,OK,11
+Pick part of the stock,10,pick,3,OK,7
+Pick exactly all stock,10,pick,10,OK,0
+Pick more than available,10,pick,11,REJECTED,10
+Pick zero,10,pick,0,REJECTED,10
+Receive zero,10,receive,0,REJECTED,10
+Receive negative,10,receive,-5,REJECTED,10
+Pick negative,10,pick,-1,REJECTED,10

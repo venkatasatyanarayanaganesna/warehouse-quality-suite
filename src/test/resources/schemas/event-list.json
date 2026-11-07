@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "time",
+      "type",
+      "sku",
+      "location",
+      "quantity",
+      "user",
+      "note"
+    ],
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "time": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      },
+      "sku": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "location": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "quantity": {
+        "type": "integer"
+      },
+      "user": {
+        "type": "string"
+      },
+      "note": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "additionalProperties": false
+  }
+}

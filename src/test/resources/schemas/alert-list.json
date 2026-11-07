@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "sku",
+      "name",
+      "quantity",
+      "reorderLevel",
+      "suggestedOrder"
+    ],
+    "properties": {
+      "sku": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "quantity": {
+        "type": "integer"
+      },
+      "reorderLevel": {
+        "type": "integer"
+      },
+      "suggestedOrder": {
+        "type": "integer"
+      }
+    },
+    "additionalProperties": false
+  }
+}

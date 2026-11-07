@@ -1,0 +1,57 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Warehouse Smoke Suite">
+  <listeners>
+    <listener class-name="com.ganesna.wms.base.AppLifecycleListener"/>
+    <listener class-name="com.ganesna.wms.base.RetryListener"/>
+  </listeners>
+
+  <!-- API smoke: sequential, because API tests share app state -->
+  <test name="API Smoke">
+    <classes>
+      <class name="com.ganesna.wms.tests.api.WarehouseApiTests">
+        <methods>
+          <include name="loginReturnsToken"/>
+          <include name="wrongPasswordIs401"/>
+          <include name="listContainsSeedItems"/>
+          <include name="createItem"/>
+          <include name="receiveAddsStock"/>
+          <include name="pickRemovesStock"/>
+          <include name="overpickIs409AndStockUnchanged"/>
+          <include name="pickerCannotDelete"/>
+        </methods>
+      </class>
+      <class name="com.ganesna.wms.tests.api.PurchaseOrderApiTests">
+        <methods>
+          <include name="partialThenFullReceive"/>
+        </methods>
+      </class>
+      <class name="com.ganesna.wms.tests.api.SalesOrderApiTests">
+        <methods>
+          <include name="partialThenFullShipment"/>
+        </methods>
+      </class>
+    </classes>
+  </test>
+
+  <!-- UI + end-to-end smoke: parallel, like testng-ui.xml -->
+  <test name="UI Smoke" parallel="methods" thread-count="2">
+    <classes>
+      <class name="com.ganesna.wms.tests.ui.LoginUiTests">
+        <methods>
+          <include name="adminLoginShowsInventory"/>
+        </methods>
+      </class>
+      <class name="com.ganesna.wms.tests.ui.InventoryUiTests">
+        <methods>
+          <include name="addItemAppearsInTable"/>
+          <include name="pickDecreasesQuantity"/>
+        </methods>
+      </class>
+      <class name="com.ganesna.wms.tests.e2e.StockConsistencyTests">
+        <methods>
+          <include name="apiCreatedItemIsVisibleInUi"/>
+        </methods>
+      </class>
+    </classes>
+  </test>
+</suite>

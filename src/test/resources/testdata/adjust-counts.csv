@@ -1,0 +1,5 @@
+# name,startQty,countedQty,reason,result,expectedQty,expectedDelta
+Count down,10,7,Cycle count,OK,7,-3
+Count up,10,25,Found extra,OK,25,15
+Count to zero,10,0,Written off,OK,0,-10
+Negative count,10,-1,Bad entry,REJECTED,10,0

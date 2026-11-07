@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "required": [
+    "location",
+    "capacity",
+    "used"
+  ],
+  "properties": {
+    "location": {
+      "type": "string"
+    },
+    "capacity": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "used": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

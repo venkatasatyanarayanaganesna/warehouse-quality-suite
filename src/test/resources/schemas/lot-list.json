@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "sku",
+      "batch",
+      "location",
+      "expiry",
+      "quantity",
+      "status"
+    ],
+    "properties": {
+      "sku": {
+        "type": "string"
+      },
+      "batch": {
+        "type": "string"
+      },
+      "location": {
+        "type": "string"
+      },
+      "expiry": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "quantity": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "OK",
+          "EXPIRING",
+          "EXPIRED",
+          "NO_EXPIRY"
+        ]
+      }
+    },
+    "additionalProperties": false
+  }
+}

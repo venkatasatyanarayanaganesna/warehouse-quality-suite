@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "required": [
+    "token",
+    "username",
+    "role"
+  ],
+  "properties": {
+    "token": {
+      "type": "string"
+    },
+    "username": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "ADMIN",
+        "PICKER"
+      ]
+    }
+  },
+  "additionalProperties": false
+}
