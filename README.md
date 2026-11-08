@@ -86,8 +86,10 @@ SKU-1003 Shrink Wrap Roll (C-03: 120), SKU-1004 Forklift Battery (D-04: 6, low s
       tests/e2e/ StockConsistencyTests
 
 ## Next
-Phase 3: a MySQL database in Docker (so data survives restarts and tests check the database),
-a Jenkins pipeline running in Docker, and extra load-test scenarios.
+- MySQL in Docker, so data survives restarts and tests can check the database
+- Jenkins running in Docker (the `Jenkinsfile` with API, k6 and UI stages is already in the repo)
+- UI tests against Selenium Grid in Docker
+- Extra load-test scenarios
 
 ## Added in this round
 - **Sales orders and shipping:** `POST /api/sales-orders` reserves stock; `POST /api/sales-orders/{id}/ship` ships it (OPEN, PARTIAL, SHIPPED).
