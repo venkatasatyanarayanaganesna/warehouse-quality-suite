@@ -22,3 +22,15 @@ services:
       - ./k6:/scripts:ro
       - ./docs/k6:/results
     command: run --summary-export=/results/compose-summary.json /scripts/load-test.js
+
+  # Security scan: docker compose --profile security run --rm zap   (report lands in docs/security)
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    profiles: ["security"]
+    user: root
+    depends_on:
+      warehouse-app:
+        condition: service_healthy
+    volumes:
+      - ./docs/security:/zap/wrk:rw
+    command: zap-baseline.py -t http://warehouse-app:8080 -r zap-report.html -J zap-report.json -I

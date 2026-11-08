@@ -19,3 +19,6 @@ allure-report/
 /k6-err.txt
 /k6-out.txt
 /login.json
+# generated reports
+docs/security/
+target/pit-reports/

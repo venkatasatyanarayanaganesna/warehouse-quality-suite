@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -18,6 +18,12 @@
     <allure.version>2.29.0</allure.version>
     <aspectj.version>1.9.26</aspectj.version>
     <slf4j.version>2.0.16</slf4j.version>
+    <jacoco.version>0.8.14</jacoco.version>
+    <!-- Coverage gate for the demo app: report only for now; set jacoco.halt=true once the real number is known -->
+    <jacoco.min.line>0.50</jacoco.min.line>
+    <jacoco.halt>false</jacoco.halt>
+    <!-- empty default so @{argLine} in surefire still resolves when the JaCoCo agent is skipped -->
+    <argLine></argLine>
     <!-- defaults; override with -Dbrowser=firefox -Dheadless=true -DsuiteFile=testng-api.xml -->
     <browser>chrome</browser>
     <headless>false</headless>
@@ -105,7 +111,7 @@
             <suiteXmlFile>${suiteFile}</suiteXmlFile>
           </suiteXmlFiles>
           <argLine>
-          --sun-misc-unsafe-memory-access=allow
+          @{argLine} --sun-misc-unsafe-memory-access=allow
            -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
           </argLine>
           <systemPropertyVariables>
@@ -114,6 +120,42 @@
             <retry.count>${retry.count}</retry.count>
           </systemPropertyVariables>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals><goal>prepare-agent</goal></goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals><goal>report</goal></goals>
+          </execution>
+          <execution>
+            <id>check</id>
+            <phase>verify</phase>
+            <goals><goal>check</goal></goals>
+            <configuration>
+              <haltOnFailure>${jacoco.halt}</haltOnFailure>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${jacoco.min.line}</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <!-- lets you start the demo app with: mvn compile exec:java -->
       <plugin>
@@ -150,6 +192,44 @@
   <id>regression</id>
   <properties><suiteFile>testng.xml</suiteFile></properties>
 </profile>
+<!-- Experimental mutation testing: mvn -Ppit test-compile org.pitest:pitest-maven:mutationCoverage -->
+  <profile>
+    <id>pit</id>
+    <properties><suiteFile>testng-api.xml</suiteFile></properties>
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.pitest</groupId>
+          <artifactId>pitest-maven</artifactId>
+          <version>1.25.7</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.pitest</groupId>
+              <artifactId>pitest-testng-plugin</artifactId>
+              <version>1.0.0</version>
+            </dependency>
+          </dependencies>
+          <configuration>
+            <targetClasses>
+              <param>com.ganesna.wms.InventoryStore</param>
+              <param>com.ganesna.wms.CsvImport</param>
+              <param>com.ganesna.wms.Json</param>
+            </targetClasses>
+            <targetTests>
+              <param>com.ganesna.wms.tests.api.*</param>
+            </targetTests>
+            <threads>1</threads>
+            <timeoutConstant>20000</timeoutConstant>
+            <outputFormats>
+              <param>HTML</param>
+              <param>XML</param>
+            </outputFormats>
+            <failWhenNoMutations>false</failWhenNoMutations>
+          </configuration>
+        </plugin>
+      </plugins>
+    </build>
+  </profile>
 </profiles>
 </project>
 

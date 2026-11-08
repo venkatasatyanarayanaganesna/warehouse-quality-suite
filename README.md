@@ -1,5 +1,9 @@
 # Warehouse Quality Suite
 
+[![CI](https://github.com/venkatasatyanarayanaganesna/warehouse-quality-suite/actions/workflows/ci.yml/badge.svg)](https://github.com/venkatasatyanarayanaganesna/warehouse-quality-suite/actions/workflows/ci.yml)
+![Java 25](https://img.shields.io/badge/Java-25-blue)
+![Tests](https://img.shields.io/badge/tests-Selenium%20%7C%20REST%20Assured%20%7C%20k6-brightgreen)
+
 A warehouse inventory web app plus a complete automated test framework for it.
 
 | Part | What it is |
@@ -172,3 +176,38 @@ and the app log are archived. The agent needs JDK 25, Maven, Chrome, k6 and curl
 
 169 tests (API, UI and end-to-end), 0 failures. API suite also verified against the Docker
 container (144 tests). k6 `load` profile passes inside Docker (0.00% failed, p95 21 ms).
+
+## CI, quality gates and tooling
+
+How the pieces fit together:
+
+```mermaid
+flowchart LR
+  subgraph Suites
+    UI[UI tests<br/>Selenium + page objects]
+    API[API tests<br/>REST Assured + JSON schema]
+    E2E[End-to-end<br/>stock consistency]
+    LOAD[k6 load and breakpoint]
+  end
+  UI --> APP[Warehouse demo app :8080]
+  API --> APP
+  E2E --> APP
+  LOAD --> APP
+  ZAP[OWASP ZAP baseline] --> APP
+  APP --> COV[JaCoCo line coverage]
+  Suites --> RPT[Allure report]
+```
+
+| Check | Run locally | In CI |
+|---|---|---|
+| API suite + line coverage | `mvn -Pci,api verify` (report: `target/site/jacoco/index.html`) | `ci.yml`, job *API tests + coverage* |
+| UI + end-to-end suite | `mvn -Pci,ui test` | `ci.yml`, job *UI + end-to-end tests* |
+| Allure report | `allure serve target/allure-results` | published to GitHub Pages from `main` |
+| Security baseline (OWASP ZAP) | `docker compose up -d --build --wait warehouse-app` then `docker compose --profile security run --rm zap` (report in `docs/security`) | `ci.yml`, job *OWASP ZAP baseline scan* |
+| Flaky-test check | n/a | `nightly-flaky.yml` runs the full regression 3 times each week and lists tests whose result changed or needed a retry |
+| Mutation testing (experimental) | `mvn -Ppit test-compile org.pitest:pitest-maven:mutationCoverage` | not in CI |
+
+Coverage is measured on the demo app (`src/main`) while the API suite runs. The build reports the figure and compares it with
+`jacoco.min.line`; set `-Djacoco.halt=true` to make a drop below the threshold fail the build.
+
+The accounts used by the tests (`admin` / `admin123`, `picker` / `picker123`) belong to the in-memory demo app and are public on purpose.
