@@ -38,6 +38,9 @@ public class ApiHandler implements HttpHandler {
     private final AuthService auth;
     private final Map<String, Cached> replays = new ConcurrentHashMap<>();
 
+    private static final int MAX_JSON_BYTES = 256 * 1024;
+    private static final int MAX_CSV_BYTES = 2 * 1024 * 1024;
+
     public ApiHandler(InventoryStore store, AuthService auth) {
         this.store = store;
         this.auth = auth;
@@ -353,8 +356,8 @@ public class ApiHandler implements HttpHandler {
     }
 
     /** Reads a CSV body. Any bad row rejects the whole file and every error is listed. */
-    private void importCsv(HttpExchange ex, AuthService.User user) throws IOException {
-        String text = new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        private void importCsv(HttpExchange ex, AuthService.User user) throws IOException {
+        String text = readBody(ex, MAX_CSV_BYTES);
         CsvImport.Result result = CsvImport.parse(text);
         if (!result.errors.isEmpty()) {
             send(ex, 400, Json.importErrors(result.errors));
@@ -426,8 +429,17 @@ public class ApiHandler implements HttpHandler {
         }
     }
 
+        /** Reads at most {@code max} bytes; anything larger is rejected with 413. */
+    private static String readBody(HttpExchange ex, int max) throws IOException {
+        byte[] data = ex.getRequestBody().readNBytes(max + 1);
+        if (data.length > max) {
+            throw new ApiException(413, "Request body too large");
+        }
+        return new String(data, StandardCharsets.UTF_8);
+    }
+
     private static Map<String, String> body(HttpExchange ex) throws IOException {
-        return Json.parseFlat(new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+        return Json.parseFlat(readBody(ex, MAX_JSON_BYTES));
     }
 
     private static String decode(String s) {

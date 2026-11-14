@@ -254,7 +254,7 @@
         <label class="check"><input type="checkbox" id="low-only"> Low stock only</label>
         <button id="export-btn" class="outline icon-btn"><span class="ico" data-icon="download"></span>Export CSV</button>
       </div>
-      <div class="table-scroll">
+      <div tabindex="0" role="region" aria-label="Inventory table" class="table-scroll">
         <table id="inventory-table">
           <thead><tr><th>SKU</th><th>Name</th><th>Qty</th><th>Reserved</th><th>Locations</th><th>Status</th><th>Stock level</th><th>Actions</th></tr></thead>
           <tbody id="items-body"></tbody>
@@ -307,7 +307,7 @@
           <div><label for="so-qty">Quantity</label><input id="so-qty" type="number" min="1" value="1"></div>
           <button id="so-btn" class="icon-btn"><span class="ico" data-icon="box"></span>Create order</button>
         </div>
-        <div class="table-scroll scroll-y">
+        <div tabindex="0" role="region" aria-label="Sales orders table" class="table-scroll scroll-y">
           <table>
             <thead><tr><th>SO</th><th>Customer</th><th>Item</th><th>Shipped</th><th>Status</th><th>Ship</th></tr></thead>
             <tbody id="so-body"></tbody>
@@ -338,7 +338,7 @@
           <div><label for="po-loc">Bin</label><input id="po-loc" placeholder="D-04"></div>
           <button id="po-btn" class="icon-btn"><span class="ico" data-icon="box"></span>Create order</button>
         </div>
-        <div class="table-scroll scroll-y">
+        <div tabindex="0" role="region" aria-label="Purchase orders table" class="table-scroll scroll-y">
           <table>
             <thead><tr><th>PO</th><th>Supplier</th><th>Item</th><th>Received</th><th>Status</th><th>Receive</th></tr></thead>
             <tbody id="po-body"></tbody>
@@ -365,7 +365,7 @@
         <div class="grid-2" style="grid-template-columns:1fr 1fr;gap:14px">
           <div>
             <label>Activity by day</label>
-            <div class="table-scroll scroll-y">
+            <div tabindex="0" role="region" aria-label="Activity by day table" class="table-scroll scroll-y">
               <table><thead><tr><th>Day</th><th>Events</th></tr></thead><tbody id="rep-days"></tbody></table>
             </div>
           </div>
@@ -379,7 +379,7 @@
 
       <div class="card">
         <h2>Audit trail <small>newest first</small></h2>
-        <div class="table-scroll scroll-y">
+        <div tabindex="0" role="region" aria-label="Audit trail table" class="table-scroll scroll-y">
           <table>
             <thead><tr><th>Time</th><th>Type</th><th>SKU</th><th>Bin</th><th>Qty</th><th>User</th><th>Note</th></tr></thead>
             <tbody id="audit-body"></tbody>
@@ -580,7 +580,7 @@ function renderTable(items, maxQty) {
     const actions = document.createElement('td');
     actions.className = 'actions';
     const qty = document.createElement('input');
-    qty.id = 'qty-' + item.sku; qty.type = 'number'; qty.min = '1'; qty.value = '1';
+    qty.id = 'qty-' + item.sku; qty.setAttribute('aria-label', 'Quantity for ' + item.sku); qty.type = 'number'; qty.min = '1'; qty.value = '1';
     actions.appendChild(qty);
     actions.appendChild(button('receive-' + item.sku, 'Receive', '', () => stockAction(item.sku, 'receive')));
     actions.appendChild(button('pick-' + item.sku, 'Pick', 'secondary', () => stockAction(item.sku, 'pick')));
@@ -671,7 +671,7 @@ async function loadSales() {
     act.className = 'actions';
     if (o.outstanding > 0) {
       const q = document.createElement('input');
-      q.id = 'so-ship-qty-' + o.id; q.type = 'number'; q.min = '1'; q.value = String(o.outstanding);
+      q.id = 'so-ship-qty-' + o.id; q.setAttribute('aria-label', 'Ship quantity for order ' + o.id); q.type = 'number'; q.min = '1'; q.value = String(o.outstanding);
       act.appendChild(q);
       act.appendChild(button('so-ship-' + o.id, 'Ship', '', () => shipOrder(o.id)));
     }
@@ -708,7 +708,7 @@ async function loadOrders() {
     act.className = 'actions';
     if (o.outstanding > 0) {
       const q = document.createElement('input');
-      q.id = 'po-qty-' + o.id; q.type = 'number'; q.min = '1'; q.value = String(o.outstanding);
+      q.id = 'po-qty-' + o.id; q.setAttribute('aria-label', 'Receive quantity for order ' + o.id); q.type = 'number'; q.min = '1'; q.value = String(o.outstanding);
       act.appendChild(q);
       act.appendChild(button('po-recv-' + o.id, 'Receive', '', () => receiveOrder(o.id)));
     }

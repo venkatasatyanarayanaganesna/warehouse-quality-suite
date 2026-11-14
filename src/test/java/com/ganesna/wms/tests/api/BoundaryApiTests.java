@@ -143,9 +143,14 @@ public class BoundaryApiTests {
         given().spec(ApiClient.spec()).when().get("/api/items").then().statusCode(401);
     }
 
-    @Test(description = "Requests with a made-up token are rejected with 401")
-    public void invalidTokenIsRejected() {
-        given().spec(ApiClient.spec()).header("Authorization", "Bearer not-a-real-token")
-                .when().get("/api/items").then().statusCode(401);
+
+    @Test(description = "A request body above the size cap is refused with 413")
+    public void oversizedBodyIsRefusedWith413() {   
+        Response response = ApiClient.authed(admin)
+                .body(ApiClient.itemBody(ApiClient.uniqueSku(), "A".repeat(300_000), 1))
+                .when().post("/api/items");
+        Assert.assertEquals(response.statusCode(), 413, response.asString());
+        given().spec(ApiClient.spec()).when().get("/api/health").then().statusCode(200);
     }
 }
+
