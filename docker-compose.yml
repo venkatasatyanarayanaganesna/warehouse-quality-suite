@@ -34,3 +34,68 @@ services:
     volumes:
       - ./docs/security:/zap/wrk:rw
     command: zap-baseline.py -t http://warehouse-app:8080 -r zap-report.html -J zap-report.json -I
+
+  # Selenium Grid (Chrome + Firefox) with the UI tests running in the same Docker network:
+  #   docker compose --profile grid up selenium-hub chrome-node firefox-node tests --abort-on-container-exit --exit-code-from tests
+  # Firefox instead of Chrome: set the BROWSER environment variable to firefox first.
+  selenium-hub:
+    image: selenium/hub:latest
+    profiles: ["grid"]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/bin/check-grid.sh --host 0.0.0.0 --port 4444"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  chrome-node:
+    image: selenium/node-chrome:latest
+    profiles: ["grid"]
+    shm_size: "2gb"
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=2
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+
+  firefox-node:
+    image: selenium/node-firefox:latest
+    profiles: ["grid"]
+    shm_size: "2gb"
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=2
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+
+  # Runs the UI + end-to-end suite. The browsers reach the app the tests start through this service's name ("tests").
+  tests:
+    image: maven:3.9-eclipse-temurin-25
+    profiles: ["grid"]
+    working_dir: /work
+    depends_on:
+      selenium-hub:
+        condition: service_healthy
+      chrome-node:
+        condition: service_started
+      firefox-node:
+        condition: service_started
+    environment:
+      - BROWSER=${BROWSER:-chrome}
+    volumes:
+      - .:/work
+      - ./docker/config-grid.properties:/work/src/test/resources/config.properties:ro
+      - m2-cache:/root/.m2
+    entrypoint: ["bash", "-c"]
+    command:
+      - |
+        until curl -sf http://selenium-hub:4444/status | grep -Eq '"ready": *true'; do sleep 2; done
+        mvn -B -ntp -Pci,ui test -Dgrid.url=http://selenium-hub:4444 -Dbrowser=$${BROWSER:-chrome}
+
+volumes:
+  m2-cache:

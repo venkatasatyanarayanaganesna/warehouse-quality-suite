@@ -211,3 +211,21 @@ Coverage is measured on the demo app (`src/main`) while the API suite runs. The 
 `jacoco.min.line`; set `-Djacoco.halt=true` to make a drop below the threshold fail the build.
 
 The accounts used by the tests (`admin` / `admin123`, `picker` / `picker123`) belong to the in-memory demo app and are public on purpose.
+
+## Accessibility, robustness tests and Selenium Grid
+
+- **Accessibility:** `AccessibilityUiTests` runs axe-core (WCAG 2.0 A and AA rules) on the login and inventory pages.
+  Findings are printed and attached to the Allure report. Add `-Da11y.strict=true` to make any violation fail the run.
+- **Boundaries and hostile input:** `BoundaryApiTests` checks limits exactly on the edge (a 30-character SKU, picking exactly the stock),
+  refusals that must change nothing, and odd input (SQL-like text, script tags, emoji, 5000 characters, malformed JSON, integer overflow)
+  that must never produce a 5xx.
+- **Race conditions:** `StockRaceApiTests` fires receives and picks at the same moment and checks the final stock equals
+  start + accepted receives - accepted picks, and never goes negative.
+- **Selenium Grid in Docker:** a hub with Chrome and Firefox nodes, plus a container that runs the UI suite against them:
+
+```
+docker compose --profile grid up selenium-hub chrome-node firefox-node tests --abort-on-container-exit --exit-code-from tests
+```
+
+  Set `BROWSER=firefox` first to use Firefox. Outside Docker, `-Dgrid.url=http://localhost:4444` makes `DriverFactory`
+  start browsers on any Selenium Grid; without it the tests use a local browser as before.

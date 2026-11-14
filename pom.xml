@@ -24,6 +24,8 @@
     <jacoco.halt>false</jacoco.halt>
     <!-- empty default so @{argLine} in surefire still resolves when the JaCoCo agent is skipped -->
     <argLine></argLine>
+    <!-- set -Dgrid.url=http://localhost:4444 to run the UI tests on a Selenium Grid -->
+    <grid.url></grid.url>
     <!-- defaults; override with -Dbrowser=firefox -Dheadless=true -DsuiteFile=testng-api.xml -->
     <browser>chrome</browser>
     <headless>false</headless>
@@ -80,6 +82,19 @@
       <version>${aspectj.version}</version>
       <scope>test</scope>
     </dependency>
+    <!-- Accessibility scans (axe-core). Selenium comes from selenium-java above, so exclude the copies axe brings along. -->
+    <dependency>
+      <groupId>com.deque.html.axe-core</groupId>
+      <artifactId>selenium</artifactId>
+      <version>4.10.2</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.seleniumhq.selenium</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <!-- Pin slf4j-api to 2.x so it matches slf4j-simple (fixes StaticLoggerBinder warning) -->
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -118,6 +133,7 @@
             <browser>${browser}</browser>
             <headless>${headless}</headless>
             <retry.count>${retry.count}</retry.count>
+            <grid.url>${grid.url}</grid.url>
           </systemPropertyVariables>
         </configuration>
       </plugin>

@@ -8,6 +8,11 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.Capabilities;
+
+import java.net.MalformedURLException;
+import java.net.URI;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,6 +62,7 @@ public final class DriverFactory {
     public static void start() {
         String browser = System.getProperty("browser", "chrome").toLowerCase();
         boolean headless = Boolean.parseBoolean(System.getProperty("headless", "false"));
+        String gridUrl = System.getProperty("grid.url", "").trim();
 
         WebDriver driver;
         if (browser.equals("firefox")) {
@@ -64,7 +70,7 @@ public final class DriverFactory {
             if (headless) {
                 options.addArguments("-headless");
             }
-            driver = new FirefoxDriver(options);
+            driver = gridUrl.isBlank() ? new FirefoxDriver(options) : remote(gridUrl, options);
         } else {
             ChromeOptions options = new ChromeOptions();
             options.setPageLoadStrategy(PageLoadStrategy.EAGER);
@@ -80,11 +86,20 @@ public final class DriverFactory {
                     "credentials_enable_service", false,
                     "profile.password_manager_enabled", false,
                     "profile.password_manager_leak_detection", false));
-            driver = new ChromeDriver(options);
+            driver = gridUrl.isBlank() ? new ChromeDriver(options) : remote(gridUrl, options);
         }
         driver.manage().window().maximize();
         DRIVER.set(driver);
         ALL.add(driver);
+    }
+
+    /** Starts a browser on a Selenium Grid; used when -Dgrid.url is set (for example http://localhost:4444). */
+    private static WebDriver remote(String gridUrl, Capabilities options) {
+        try {
+            return new RemoteWebDriver(URI.create(gridUrl).toURL(), options);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Invalid grid.url: " + gridUrl, e);
+        }
     }
 
     public static WebDriver get() {

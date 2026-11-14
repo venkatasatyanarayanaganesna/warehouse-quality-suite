@@ -4,15 +4,10 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /** Minimal JSON helpers so the demo app needs no libraries. Parses flat objects only. */
 public final class Json {
-
-    private static final Pattern PAIR =
-            Pattern.compile("\"(\\w+)\"\\s*:\\s*(\"((?:[^\"\\\\]|\\\\.)*)\"|[^,}\\s]+)");
 
     private Json() {
     }
@@ -192,41 +187,87 @@ public final class Json {
         return "{\"status\":" + status + ",\"error\":" + quote(message) + "}";
     }
 
+    /**
+     * Parses a flat JSON object into a map of strings. Hand-written scanner (no regex), so very
+     * long string values cannot cause a StackOverflowError.
+     */
     public static Map<String, String> parseFlat(String body) {
         Map<String, String> map = new HashMap<>();
         if (body == null) {
             return map;
         }
-        Matcher m = PAIR.matcher(body);
-        while (m.find()) {
-            String value = m.group(3) != null ? unescape(m.group(3)) : m.group(2);
-            map.put(m.group(1), value);
+        int n = body.length();
+        int i = 0;
+        int[] end = new int[1];
+        while (i < n) {
+            if (body.charAt(i) != '"') {
+                i++;
+                continue;
+            }
+            String key = readString(body, i, end);
+            i = end[0];
+            int j = skipWs(body, i);
+            if (j >= n || body.charAt(j) != ':') {
+                continue; // that string was a value, not a key
+            }
+            j = skipWs(body, j + 1);
+            if (j >= n) {
+                break;
+            }
+            if (body.charAt(j) == '"') {
+                map.put(key, readString(body, j, end));
+                i = end[0];
+            } else {
+                int k = j;
+                while (k < n && ",} \t\r\n".indexOf(body.charAt(k)) < 0) {
+                    k++;
+                }
+                map.put(key, body.substring(j, k));
+                i = k;
+            }
         }
         return map;
     }
 
-    private static String unescape(String s) {
+    private static int skipWs(String s, int i) {
+        while (i < s.length() && Character.isWhitespace(s.charAt(i))) {
+            i++;
+        }
+        return i;
+    }
+
+    /** Reads a JSON string starting at the opening quote; end[0] = index after the closing quote. */
+    private static String readString(String s, int start, int[] end) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (c == '\\' && i + 1 < s.length()) {
-                char n = s.charAt(++i);
-                switch (n) {
+        int i = start + 1;
+        while (i < s.length()) {
+            char c = s.charAt(i++);
+            if (c == '"') {
+                break;
+            }
+            if (c == '\\' && i < s.length()) {
+                char e = s.charAt(i++);
+                switch (e) {
                     case 'n': sb.append('\n'); break;
                     case 't': sb.append('\t'); break;
                     case 'r': sb.append('\r'); break;
                     case 'u':
-                        if (i + 4 < s.length()) {
-                            sb.append((char) Integer.parseInt(s.substring(i + 1, i + 5), 16));
-                            i += 4;
+                        if (i + 4 <= s.length()) {
+                            try {
+                                sb.append((char) Integer.parseInt(s.substring(i, i + 4), 16));
+                                i += 4;
+                            } catch (NumberFormatException ignored) {
+                                sb.append('u');
+                            }
                         }
                         break;
-                    default: sb.append(n);
+                    default: sb.append(e);
                 }
             } else {
                 sb.append(c);
             }
         }
+        end[0] = i;
         return sb.toString();
     }
 }
